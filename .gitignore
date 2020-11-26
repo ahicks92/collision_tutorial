@@ -1,0 +1,6 @@
+/venv/
+/venv_pypy/
+
+.hypothesis/
+.vscode/
+__pycache__
