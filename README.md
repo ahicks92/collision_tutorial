@@ -7,7 +7,7 @@ If you're trying to use Python and you need axis-aligned bounding box collision,
 
 people are always like "What's better than the two nested for loops".  What's better than the two nested for loops is this, and a number of more advanced optimizations not described here.
 
-there are benchmarks at the bottom of this file proving that the code here is fast enough for most practical use scases. Note that if you try to feed a tilemap to it without some preprocessing, it's going to be unhappy.
+there are benchmarks at the bottom of this file proving that the code here is fast enough for most practical use cases. Note that if you try to feed a tilemap to it without some preprocessing, it's going to be unhappy.
 You can either process collisions with a tilemap yourself, or see the notes at the bottom of the file as to how you might go about extending this for that use case.
 
 You'll want to clone this repository and follow along in the code.  I don't paste most of it here because this README is already going to be long enough.
