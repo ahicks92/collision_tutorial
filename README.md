@@ -73,7 +73,7 @@ Before we get started, it's worth noting the following.  I don't have sources ha
 - Local variables are the fastest kind of variable.
 - Attribute lookups are faster than attribute lookups and computing with the attribute.
 - Allocation is heavily optimized. You can make lists and throw them out all day long, and Python will mostly be fine with this.  There are other problems with lists, but continually asking the OS for memory isn't one of them.
-- Python won't inline or anything like that unless it's Cython.  Cython won't inline a lot.  Pypy will be very good at inling, but running Pypy verywhere isn't practical.
+- Python won't inline or anything like that unless it's Cython.  Cython won't inline a lot.  Pypy will be very good at inlining, but running Pypy everywhere isn't practical.
 
 Anyway, with this out of the way, let's get started.
 
@@ -166,7 +166,7 @@ they never build stuff up in memory: if `gen()` wanted to yield 10000 items, it'
 
 If you want to know more, look up a tutorial on generators.  The two most important facts for using this code are these:
 
-- The only thing you can do with a generator is `for i in gen()` or other operations that acess the next item. You can't index them, etc.
+- The only thing you can do with a generator is `for i in gen()` or other operations that access the next item. You can't index them, etc.
 - You can get from a generator to a list (or set, or whatever else) by just doing `list(gen())`.
 
 Most of the code here uses generators to avoid large lists.
@@ -234,7 +234,7 @@ use any other tricks, it's the best we've got to throw at the problem.
 
 # So How Can We Do Better: An introduction To Partitioning
 
-The big trick of this entire thing is to divide the list of boxes into smaller sublists.  Suppose that we have 100 objects, with our 5000 comparions from the above optimized function, but we can somehow
+The big trick of this entire thing is to divide the list of boxes into smaller sublists.  Suppose that we have 100 objects, with our 5000 comparisons from the above optimized function, but we can somehow
 divide our 100 objects into two lists of 50 each.  Then we have:
 
 ```
@@ -300,10 +300,10 @@ There's a lot that can be done if we take one step further and introduce somethi
 things close to the player, and keep statistics on what's going on in order to change behavior at runtime.
 Most of these aren't implemented here because this is a tutorial, at this point a refrain in these later parts of the document.
 
-The way the manager works is as follows: you `.register()` your boxes and `.remove(box)` them to get rid of it.  This has the downside that your boxes wont' be garbage collected
+The way the manager works is as follows: you `.register()` your boxes and `.remove(box)` them to get rid of it.  This has the downside that your boxes won't be garbage collected
 unless you remember to remove them.  But it lets the manager be aware of movement when it happens via `box.move`, which lets us implement:
 
-#Optimization 4: The Stationary Box Optimization
+# Optimization 4: The Stationary Box Optimization
 
 let's say that your level has lots of power-ups and scenery, none of which moves often, for example platforms.  It's really a shame that we're checking them against everything including all the other stationary stuff.  Here's how to do better (see `box_manager.BoxManager`).
 
@@ -322,7 +322,7 @@ n, n, n, s, s
 Where `n` is nonstationary and `s` is stationary, then by the time we get to the first stationary box, we've checked all the `n` against all the `s` as well as all the other `n`.
 We can thus stop at the first stationary box and abort the algorithm early.
 
-To get the list in this order you simply do a sort `partiton.sort(key=lambda o: o.stationary)` since `true : false` in Python.  This puts all the stationary ones at thew right end and lets the above
+To get the list in this order you simply do a sort `partition.sort(key=lambda o: o.stationary)` since `true : false` in Python.  This puts all the stationary ones at the right end and lets the above
 trick function.
 
 This actually means that we can consider all stationary boxes free in the grand scheme of things.  This leads to the second-to-last tweak to this algorithm: we can raise the partition size so that the average number of nonstationary boxes
@@ -339,7 +339,7 @@ and 10 out of 1000: in the latter case not optimizing at all might be better.
 
 Obviously there's no point to any of this if it isn't fast.  Consequently I've prepared some benchmarks.  To duplicate these, either run `benchmark.py` or `benchmark_cython.py` against a Python interpreter of your choice.
 I've run these on a machine with an Intel `I7-8700` at 3.20 GHZ.
-they work by producing lists of random boxes (fixed using a seed, or put another way every run uses the same list), then running them through one of the above algorithms.  We report 3 values for each combination: the number of objects, the average time per iteration, and the estimate of how many times you can run it in a second.  Results follow:
+They work by producing lists of random boxes (fixed using a seed, or put another way every run uses the same list), then running them through one of the above algorithms.  We report 3 values for each combination: the number of objects, the average time per iteration, and the estimate of how many times you can run it in a second.  Results follow:
 
 ## CPython 3.7:
 
@@ -643,7 +643,7 @@ For something like this, I like to use a tool called [Hypothesis](https://hypoth
 and print example broken programs.  I'm not going to provide a full overview of it here, but if you look at the tests directory, it's pretty straightforward stuff.
 
 The one complexity we have with the tests is that we need to deal with the fact that we might get `(a, b)` from one algorithm, then have the other report `(b, a)`.  There's a few ways of dealing with this, two of which are used here.
-For the case of testing the `check_exhaustive` wee duplicate the pairs returned by `check_deduplicated` and then check that test.  FOr the `BoxManager` tests, we flip the pairs so that `id(a)` <= ~id(b)`.  Either case
+For the case of testing the `check_exhaustive` we duplicate the pairs returned by `check_deduplicated` and then check that test.  For the `BoxManager` tests, we flip the pairs so that `id(a)` <= ~id(b)`.  Either case
 yields sets which are equal if the collisions are equal.
 
 By linking this to the base algorithm `check_exhaustive`, we can verify that this works, even better than if a human tested it by hand.  The only point of failure is if `check_exhaustive` itself isn't working.
@@ -661,3 +661,15 @@ I've mentioned a few future directions above.  I'll go ahead and reiterate some 
 - Optimize the partitioner to not create as many lists.
 - Figure out better heuristics for when to apply and when not to apply the stationary object optimization.
 - Some better manual tests for the base case probably won't uncover bugs, but they certainly can't hurt anything.
+
+
+# Bonus: tilemaps
+
+You have two choices with tilemaps.  The first, and easiest, is to simply handle it yourself.
+
+The second is to combine impassable rectangles into boxes, for example a 2 by 2 square of dirt becomes a 2 by 2 box.  Then you pass those boxes to this code.  I'm not going to provide an algorithm for that: it's a bit hard to write and I don't have the time.  But essentially you find all impassable
+tiles that aren't part of a box yet, and then you keep trying to extend the rectangle in the x and/or y direction as much as possible in a loop.  You'd want to cache the output: this is as slow as it sounds.
+
+But at runtime, as the above benchmarks show, you're not going to get more than 1000 boxes or so.  It's practical, but not if you throw thousands of 1-tiel boxes at it.
+
+You might be saying "but other languages can", but that's not exactly true: you'll be able to push it a bit further, but not far enough.  You'll also have ram issues, since boxes are actually 6 or 7 values.
